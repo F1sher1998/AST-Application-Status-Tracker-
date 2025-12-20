@@ -40,21 +40,14 @@ CREATE TABLE applications(
 
 
 
+
 CREATE TABLE rounds (
   id SERIAL PRIMARY KEY,
-
   user_id INT REFERENCES users(id),
-  
   application_id INT NOT NULL,
-
   prepare_note TEXT,
-
   reflection_note TEXT,
-
   interview_number INT NOT NULL CHECK(interview_number > 0),
-
-  CONSTRAINT rounds_application_user_fk
-  FOREIGN KEY (application_id, user_id)
-  REFERENCES applications (id, user_id)
-  ON DELETE CASCADE
+  FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 )
