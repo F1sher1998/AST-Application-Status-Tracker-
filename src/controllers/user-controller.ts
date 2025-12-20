@@ -1,0 +1,49 @@
+import { neon } from "@neondatabase/serverless";
+import type{ Request, Response} from 'express'
+import dotenv from 'dotenv'
+dotenv.config()
+
+const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!)
+
+
+/// Creating user controllers
+
+export const createUser = async(req: Request, res: Response): Promise<Response> => {
+    const {name, email, password} = req.body;
+
+    /// Checking if all the data has been provided
+    if(!name || !email || !password){
+        return res.status(400).send("You did not enter one of the fields!")};
+    
+
+    /// Checking if the email is already in use
+    const existingEmail = await sql`SELECT id FROM users WHERE email = ${email}`;
+    if(existingEmail.length >= 1){
+        return res.status(400).send('User with this email already exists')};
+    
+    /// Creating a user
+    try{
+        const [newUser] = await sql.transaction([
+            sql`INSERT INTO users (name, email, password_hash)
+            VALUES(${name}, ${email}, ${password})
+            RETURNING id, created_at`
+        ]);
+
+        return res.status(201).json({message: "User has been create", user: newUser})
+
+    }catch(error){
+        console.log("The error has occured during user creatin")
+        return res.status(500).json({message: "Internal server error", error: error.name})
+    }
+
+}
+
+export const findAllUsers = async(req: Request, res: Response) =>{
+    return res.status(200).json("Hi")
+}
+
+
+export const findUser = async(req: Request, res: Response) => {}
+
+
+export const deleteUser = async(req: Request, res: Response) => {}
