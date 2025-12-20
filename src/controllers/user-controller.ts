@@ -3,6 +3,7 @@ import type{ Request, Response} from 'express'
 import dotenv from 'dotenv'
 dotenv.config()
 
+/// DB branch selection
 const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!)
 
 
@@ -23,14 +24,17 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
     
     /// Creating a user
     try{
+
+        /// Create query
         const [newUser] = await sql.transaction([
             sql`INSERT INTO users (name, email, password_hash)
             VALUES(${name}, ${email}, ${password})
             RETURNING id, created_at`
         ]);
-
+        /// success message
         return res.status(201).json({message: "User has been create", user: newUser})
-
+    
+    /// error message
     }catch(error){
         console.log("The error has occured during user creatin")
         return res.status(500).json({message: "Internal server error", error: error.name})
