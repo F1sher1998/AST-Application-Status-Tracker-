@@ -66,8 +66,8 @@ export const findUser = async(req: Request, res: Response): Promise<Response> =>
     const {id} = req.params;
 
 
-    /// Check if ID was provided -->> deprecated
-    if(!id) return res.status(400).send("You haven't provided user's id");
+    /// Check if ID was provided
+    if(!req.params.id) return res.status(400).send("You haven't provided user's id");
 
     /// Search for an existing user
     const existingUser = await sql`SELECT email FROM users WHERE id = ${parseInt(id)}`
