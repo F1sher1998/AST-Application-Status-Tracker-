@@ -3,6 +3,8 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import userRouter from "./routes/user-routes"
 import applicationRouter from "./routes/application-routes"
+import roundRouter from './routes/round-routes'
+
 
 dotenv.config()
 const app = express();
@@ -20,6 +22,8 @@ app.use(cors())
 //server config
 app.use("/users", userRouter)
 app.use("/applications", applicationRouter)
+app.use("/rounds", roundRouter)
+
 
 //connection
 app.listen(process.env.PORT, () => {
