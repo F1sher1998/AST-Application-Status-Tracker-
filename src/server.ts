@@ -2,7 +2,7 @@ import express from "express";
 import cors from 'cors'
 import dotenv from 'dotenv'
 import userRouter from "./routes/user-routes"
-
+import applicationRouter from "./routes/application-routes"
 
 dotenv.config()
 const app = express();
@@ -18,8 +18,8 @@ app.use(cors())
 
 
 //server config
-
 app.use("/users", userRouter)
+app.use("/applications", applicationRouter)
 
 //connection
 app.listen(process.env.PORT, () => {
