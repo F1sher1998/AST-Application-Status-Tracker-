@@ -43,11 +43,17 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
 }
 
 export const findAllUsers = async(req: Request, res: Response): Promise<Response> =>{
+    /// Searching for users
     try{
         const users = await sql`SELECT name, id FROM users`
+
+        /// Check if there ARE users
         if(users.length < 1) return res.status(400).send("There are no users");
 
+        /// Success message
         return res.status(200).json({users: users})
+
+        /// Error message
     }catch(error){
         console.log("Error has occured during finding all users")
         return res.status(500).json({message: "Internal server error", error: error.name})
@@ -56,22 +62,30 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
 
 
 export const findUser = async(req: Request, res: Response): Promise<Response> => {
+    /// ID of the desired user
     const {id} = req.params;
 
+
+    /// Check if ID was provided -->> deprecated
     if(!id) return res.status(400).send("You haven't provided user's id");
 
+    /// Search for an existing user
     const existingUser = await sql`SELECT email FROM users WHERE id = ${parseInt(id)}`
+
+    /// Check if user with this ID exists 
     if(existingUser.length <= 0) return res.status(400).send("User with this id doesnt exists");
 
+    /// Extract existing user
     try{
         const [user] = await sql`SELECT name, id FROM users WHERE id = ${id}`
 
+        /// Success message
         return res.status(200).json({users: user})
+
+    /// Error message
     }catch(error){
         console.log("Error has occured during finding a user")
         return res.status(500).json({message: "Internal server error", error: error.name})
     }
 }
 
-
-export const deleteUser = async(req: Request, res: Response) => {}
