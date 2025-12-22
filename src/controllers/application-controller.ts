@@ -6,8 +6,11 @@ import type { Application } from "../utils/types";
 const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!)
 
 export const createApplication = async(req: Request, res:Response): Promise<Response> => {
+    const accessToken = req.cookies.AccessToken
+    if(!accessToken) res.status(405).send("You are not authorized!")
+
     /// Application mandatory data
-    const { error, value } = req.body;
+    const { error, value } = applicationSchema.validate(req.body);
 
     if(error){
         return res.status(400).json({errors: error.details.map(d => d.message)})
@@ -36,7 +39,8 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
 }
 
 export const findAllApplications = async(req: Request, res:Response): Promise<Response> => {
-
+    const accessToken = req.cookies.AccessToken
+    if(!accessToken) res.status(405).send("You are not authorized!")
     /// Finding applications
     try{
 
@@ -57,7 +61,8 @@ export const findAllApplications = async(req: Request, res:Response): Promise<Re
 }
 
 export const FilterApplications = async(req: Request, res:Response): Promise<Response> => {
-
+    const accessToken = req.cookies.AccessToken
+    if(!accessToken) res.status(405).send("You are not authorized!")
     /// Allowed Search filters
     const AllowedFilters = {
         status: 'status',
