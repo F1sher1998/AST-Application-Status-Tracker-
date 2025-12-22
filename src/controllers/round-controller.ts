@@ -40,3 +40,32 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
         return res.status(500).json({messae: "Internal message error", error: error})
     }
 }
+
+
+export const addNotes = async(req: Request, res:Response): Promise<Response> =>  {
+
+    const {userId, appId} = req.params;
+    if(!req.params) return res.status(400).send("You did not include all the data");
+
+    const note = req.body;
+
+    const keys = Object.keys(note);
+    const setClause = keys.map((key) => `${key}`).join(', ');
+    const values = Object.values(note)[0];
+
+    console.log(setClause, values)
+
+    try{
+        const note = await sql.transaction([sql`
+            UPDATE rounds 
+            SET ${sql.unsafe(setClause)} = ${values} 
+            WHERE user_id = ${userId} AND application_id = ${appId}
+            RETURNING *
+            `])
+
+        return res.status(201).json({round: note})
+    }catch(error){
+        console.log("Error has occured while updating/adding notes")
+        return res.status(500).json({message: "Internal server error", error: error})
+    }
+}

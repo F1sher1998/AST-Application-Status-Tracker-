@@ -18,7 +18,6 @@ app.use(express.urlencoded())
 app.use(cors())
 
 
-
 //server config
 app.use("/users", userRouter)
 app.use("/applications", applicationRouter)
