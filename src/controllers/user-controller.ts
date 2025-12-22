@@ -1,12 +1,13 @@
 import { neon } from "@neondatabase/serverless";
 import type{ Request, Response} from 'express'
 import dotenv from 'dotenv'
-import { userSchema } from "../validator";
-import { type User } from "../utils/types";
+import { signAccessToken, signCookie, signRefreshToken } from "../utils/shared";
+import { userSchema, logInSchema } from "../validator";
+import { type JwtPayload, type User } from "../utils/types";
 dotenv.config()
 
 /// DB branch selection
-const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!)
+const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults: true})
 
 
 /// Creating user controllers
@@ -26,7 +27,7 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
 
     /// Checking if the email is already in use
     const existingEmail = await sql`SELECT id FROM users WHERE email = ${body.email}`;
-    if(existingEmail.length >= 1){
+    if(!existingEmail){
         return res.status(400).send('User with this email already exists')};///-->> reaplace
     
     /// Creating a user
@@ -49,13 +50,42 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
 
 }
 
+export const logInUser = async(req: Request, res: Response): Promise<Response> => {
+    const { error, value } = logInSchema.validate(req.body);
+
+    if(error){
+        return res.status(400).json({errors: error.details.map(d => d.message)})
+    }
+
+    const body = value as User
+    console.log(body.email, body.password)
+    try{
+        const payload = await sql`
+        SELECT id, email 
+        FROM users 
+        WHERE password_hash = ${body.password} AND email = ${body.email}
+        `
+
+        const accessToken = await signAccessToken({userId: payload.rows[0].user_id, email: payload.rows[0].email});
+        const refreshToken = await signRefreshToken({userId: payload.rows[0].user_id, email: payload.rows[0].email});
+
+
+        res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
+        res.cookie("RefreshToken", refreshToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
+
+        return res.status(200).send("You have logged in successfully")
+    }catch(error){
+        return res.status(500).json({message: "Internal server error", error: error})
+    }
+}
+
 export const findAllUsers = async(req: Request, res: Response): Promise<Response> =>{
     /// Searching for users
     try{
         const users = await sql`SELECT name, id FROM users`
 
         /// Check if there ARE users
-        if(users.length < 1) return res.status(400).send("There are no users");
+        if(!users) return res.status(400).send("There are no users");
 
         /// Success message
         return res.status(200).json({users: users})
@@ -80,11 +110,11 @@ export const findUser = async(req: Request, res: Response): Promise<Response> =>
     const existingUser = await sql`SELECT email FROM users WHERE id = ${parseInt(id)}`
 
     /// Check if user with this ID exists 
-    if(existingUser.length <= 0) return res.status(400).send("User with this id doesnt exists");
+    if(!existingUser) return res.status(400).send("User with this id doesnt exists");
 
     /// Extract existing user
     try{
-        const [user] = await sql`SELECT name, id FROM users WHERE id = ${id}`
+        const user = await sql`SELECT name, id FROM users WHERE id = ${id}`
 
         /// Success message
         return res.status(200).json({users: user})

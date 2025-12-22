@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import userRouter from "./routes/user-routes"
 import applicationRouter from "./routes/application-routes"
 import roundRouter from './routes/round-routes'
+import cookieParser from "cookie-parser";
 
 
 dotenv.config()
@@ -11,6 +12,7 @@ const app = express();
 
 
 // body parses
+app.use(cookieParser())
 app.use(express.json());
 app.use(express.urlencoded())
 
