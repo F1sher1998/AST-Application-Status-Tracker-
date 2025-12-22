@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import type{ Request, Response} from 'express'
 import dotenv from 'dotenv'
-import { signAccessToken, signCookie, signRefreshToken } from "../utils/shared";
+import { signAccessToken, signCookie, signRefreshToken, hashPassword, comparePasswords} from "../utils/shared";
 import { userSchema, logInSchema } from "../validator";
 import { type JwtPayload, type User } from "../utils/types";
 dotenv.config()
@@ -32,10 +32,13 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
     
     /// Creating a user
     try{
+        const hashedPassword = await hashPassword(body.password)
+
+
         /// Create query
         const [newUser] = await sql.transaction([
             sql`INSERT INTO users (name, email, password_hash)
-            VALUES(${body.name}, ${body.email}, ${body.password})
+            VALUES(${body.name}, ${body.email}, ${hashedPassword})
             RETURNING id, created_at`
         ]);
         
@@ -58,12 +61,19 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
     }
 
     const body = value as User
-    console.log(body.email, body.password)
+
+    
     try{
+        const hashedPassword = await sql`SELECT password_hash FROM users WHERE email = ${body.email}`
+
+        const verified = await comparePasswords(body.password, hashedPassword.rows[0].password_hash)
+
+        if(!verified) return res.status(400).send("Password is incorrect");
+
         const payload = await sql`
         SELECT id, email 
         FROM users 
-        WHERE password_hash = ${body.password} AND email = ${body.email}
+        WHERE password_hash = ${hashedPassword.rows[0].password_hash} AND email = ${body.email}
         `
 
         const accessToken = await signAccessToken({userId: payload.rows[0].user_id, email: payload.rows[0].email});

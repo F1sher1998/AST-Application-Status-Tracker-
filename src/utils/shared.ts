@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
+import bcrypt from 'bcrypt';
 import { type CookiePayload, type JwtPayload } from './types';
 import type { Response } from 'express';
 
@@ -30,3 +31,15 @@ export const signCookie = async(res: Response, value: string, name: string, time
 export const clearCookie = async(res: Response, payload: CookiePayload) => {
     return res.clearCookie(payload.name, {maxAge: payload.exp})
 };
+
+
+export const hashPassword = async(password: string): Promise<string> => {
+  const hashed = await bcrypt.hash(password, 10)
+  return hashed;
+}
+
+
+export const comparePasswords = async(password: string, hashed: string): Promise<boolean> => {
+  const compared = await bcrypt.compare(password, hashed)
+  return compared;
+}
