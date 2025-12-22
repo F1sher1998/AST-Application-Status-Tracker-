@@ -1,10 +1,19 @@
 export interface JwtPayload{
     userId: string,
     email: string,
-    iat: string,
-    exp:string
+    iat?: string,
+    exp?: string | number
 }
 
+export interface CookiePayload{
+    value: string,
+    name: string,
+    exp: number
+}
+
+export interface Token{
+    token: string
+}
 
 export interface User{
     name: string,
