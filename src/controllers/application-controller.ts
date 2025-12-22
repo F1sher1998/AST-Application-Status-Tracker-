@@ -1,12 +1,19 @@
 import { neon } from "@neondatabase/serverless";
 import type { Request, Response } from "express";
-
+import { applicationSchema } from "../validator";
+import type { Application } from "../utils/types";
 
 const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!)
 
 export const createApplication = async(req: Request, res:Response): Promise<Response> => {
     /// Application mandatory data
-    const { id, title, status, company, date, person } = req.body;
+    const { error, value } = req.body;
+
+    if(error){
+        return res.status(400).json({errors: error.details.map(d => d.message)})
+    }
+
+    const body = value as Application
 
     /// Creating an application
     try{
@@ -14,7 +21,7 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
         /// Creating an application
         const [application] = await sql.transaction([sql`
                 INSERT INTO applications (user_id, job_title, status, company, application_date, reached_person)
-                VALUES (${id}, ${title}, ${status}, ${company}, ${date}, ${person})
+                VALUES (${body.userId}, ${body.title}, ${body.status}, ${body.company}, ${body.date}, ${body.person})
                 RETURNING job_title, status, company, application_date
             `]);
 

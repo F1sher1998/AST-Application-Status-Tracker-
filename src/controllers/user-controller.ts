@@ -1,6 +1,8 @@
 import { neon } from "@neondatabase/serverless";
 import type{ Request, Response} from 'express'
 import dotenv from 'dotenv'
+import { userSchema } from "../validator";
+import { type User } from "../utils/types";
 dotenv.config()
 
 /// DB branch selection
@@ -10,34 +12,39 @@ const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATAB
 /// Creating user controllers
 
 export const createUser = async(req: Request, res: Response): Promise<Response> => {
-    const {name, email, password} = req.body;
+    /// Receive and validate request body
+    const {error, value} = userSchema.validate(req.body);
 
-    /// Checking if all the data has been provided
-    if(!name || !email || !password){
-        return res.status(400).send("You did not enter one of the fields!")};
+    /// Check for validation error
+    if(error){
+        return res.status(400).json({errors: error.details.map(d => d.message)})
+    }
+
+    /// Assign validated values
+    const body = value as User
     
 
     /// Checking if the email is already in use
-    const existingEmail = await sql`SELECT id FROM users WHERE email = ${email}`;
+    const existingEmail = await sql`SELECT id FROM users WHERE email = ${body.email}`;
     if(existingEmail.length >= 1){
-        return res.status(400).send('User with this email already exists')};
+        return res.status(400).send('User with this email already exists')};///-->> reaplace
     
     /// Creating a user
     try{
-
         /// Create query
         const [newUser] = await sql.transaction([
             sql`INSERT INTO users (name, email, password_hash)
-            VALUES(${name}, ${email}, ${password})
+            VALUES(${body.name}, ${body.email}, ${body.password})
             RETURNING id, created_at`
         ]);
+        
         /// success message
-        return res.status(201).json({message: "User has been create", user: newUser})
+        return res.status(201).json({message: "User has been create", user: newUser})///-->> reaplace
     
     /// error message
     }catch(error){
         console.log("The error has occured during user creatin")
-        return res.status(500).json({message: "Internal server error", error: error.name})
+        return res.status(500).json({message: "Internal server error", error: error.name})///-->> reaplace
     }
 
 }

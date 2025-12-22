@@ -1,33 +1,34 @@
 import { neon } from "@neondatabase/serverless";
 import type { Request, Response } from "express";
-
+import { roundSchema, noteSchema } from "../validator";
+import { type Round } from "../utils/types";
 
 const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!)
 
 
 
 export const createRound = async(req: Request, res:Response): Promise<Response> => {
-    /// Mandatory round info
-    const {userId, appId, number} = req.body;
+    /// Validating request body
+    const {error, value} = roundSchema.validate(req.body)
 
+    /// Check for validation error
+    if(error){
+        return res.status(400).json({errors: error.details.map(d => d.message)})
+    }
 
-    /// Check if all mandatory info was provided
-    if(!req.body.userId) return res.status(400).send("You did not include userId");
-    if(!req.body.number) return res.status(400).send("You did not include round number");
-    if(!req.body.appId) return res.status(400).send("You did not include appId");
-
+    /// Assign validated values
+    const body = value as Round
 
     /// Check if this round already exists within this interview
-    const existingRound = await sql`SELECT * FROM rounds WHERE user_id = ${userId} AND application_id = ${appId} AND interview_number = ${number}`
-
-    if(existingRound.length > 0) return res.status(400).send(`This application already has an interview number ${number}`);
+    const existingRound = await sql`SELECT * FROM rounds WHERE user_id = ${body.userId} AND application_id = ${body.appId} AND interview_number = ${body.number}`
+    if(existingRound.length > 0) return res.status(400).send(`This application already has an interview number ${body.number}`);
 
 
     /// Create a round
     try{
         const [round] = await sql.transaction([sql`
             INSERT INTO rounds (user_id, application_id, interview_number)
-            VALUES (${userId}, ${appId}, ${number})
+            VALUES (${body.userId}, ${body.appId}, ${body.number})
             RETURNING *
             `]);
 
@@ -44,26 +45,32 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
 
 export const addNotes = async(req: Request, res:Response): Promise<Response> =>  {
 
-    const {userId, appId} = req.params;
-    if(!req.params) return res.status(400).send("You did not include all the data");
+    const { userId, appId } = req.params
 
-    const note = req.body;
+    const {error, value} = noteSchema.validate(req.body);
 
-    const keys = Object.keys(note);
+    /// Check for validation error
+    if(error){
+        return res.status(400).json({errors: error.details.map(d => d.message)})
+    }
+
+    const body = value
+
+    const keys = Object.keys(body);
     const setClause = keys.map((key) => `${key}`).join(', ');
-    const values = Object.values(note)[0];
+    const values = Object.values(body)[0];
 
-    console.log(setClause, values)
+    console.log(setClause)
 
     try{
-        const note = await sql.transaction([sql`
-            UPDATE rounds 
-            SET ${sql.unsafe(setClause)} = ${values} 
+        const [note] = await sql.transaction([sql`
+            UPDATE rounds SET ${sql.unsafe(setClause)} = ${values}
             WHERE user_id = ${userId} AND application_id = ${appId}
             RETURNING *
-            `])
+            `]);
 
-        return res.status(201).json({round: note})
+        return res.status(201).json({message: "Note was updated", note:  note})
+ 
     }catch(error){
         console.log("Error has occured while updating/adding notes")
         return res.status(500).json({message: "Internal server error", error: error})
