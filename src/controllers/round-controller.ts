@@ -9,6 +9,10 @@ const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATAB
 
 export const createRound = async(req: Request, res:Response): Promise<Response> => {
     /// Validating request body
+    const accessToken = req.cookies.AccessToken
+    if(!accessToken) res.status(405).send("You are not authorized!")
+
+
     const {error, value} = roundSchema.validate(req.body)
 
     /// Check for validation error
@@ -27,8 +31,8 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
     /// Create a round
     try{
         const [round] = await sql.transaction([sql`
-            INSERT INTO rounds (user_id, application_id, interview_number)
-            VALUES (${body.userId}, ${body.appId}, ${body.number})
+            INSERT INTO rounds (user_id, application_id, interview_number, prepare_note, reflection_note)
+            VALUES (${body.userId}, ${body.appId}, ${body.number}, ${body.prepare}, ${body.reflect})
             RETURNING *
             `]);
 

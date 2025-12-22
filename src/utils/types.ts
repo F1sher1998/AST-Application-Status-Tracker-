@@ -38,7 +38,7 @@ export interface Application{
 export interface Round{
     userId: number,
     appId: number,
-    prepare?: string,
-    reflect?: string,
+    prepare?: string | null,
+    reflect?: string | null,
     number: number
 }
