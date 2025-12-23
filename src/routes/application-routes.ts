@@ -6,5 +6,6 @@ const router = Router()
 router.post("", applicationController.createApplication)
 router.get("/:filterType/:value", applicationController.FilterApplications)
 router.get("", applicationController.findAllApplications)
+router.patch("/:appId", applicationController.updateApplicationStatus)
 
 export default router

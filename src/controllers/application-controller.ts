@@ -108,3 +108,28 @@ export const FilterApplications = async(req: Request, res:Response): Promise<Res
     
 }
 
+export const updateApplicationStatus = async(req: Request, res:Response): Promise<Response> => {
+    const accessToken = req.cookies.AccessToken
+    if(!accessToken) res.status(405).send("You are not authorized!");
+
+    const { appId } = req.params;
+    const { status } = req.body;
+
+    /// Check if status is provided
+    if(!status) return res.status(400).send("You haven't provided a status");
+    /// Update application status
+    console.log(appId, status)
+    try{
+        const updatedApplication = await sql.transaction([sql`
+            UPDATE applications
+            SET status = ${status}
+            WHERE id = ${appId}
+            RETURNING id, job_title, status
+        `]);
+        /// Success message
+        return res.status(200).json({message: "Application status has been updated", application: updatedApplication})
+    }catch(error){
+        console.log("Error has occured during updating application status")
+        return res.status(500).json({message: "Internal server error", error: error});
+    }    
+}
