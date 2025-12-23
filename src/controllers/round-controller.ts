@@ -2,8 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import type { Request, Response } from "express";
 import { roundSchema, noteSchema } from "../validator";
 import { type Round } from "../utils/types";
-
-const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!)
+import { sql } from "../db/Neon/neon-client";
 
 
 

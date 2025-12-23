@@ -6,9 +6,7 @@ import { userSchema, logInSchema } from "../validator";
 import { type JwtPayload, type User } from "../utils/types";
 dotenv.config()
 
-/// DB branch selection
-const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults: true})
-
+const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults:true})
 
 /// Creating user controllers
 
