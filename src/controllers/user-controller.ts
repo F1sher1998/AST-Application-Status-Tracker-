@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import { signAccessToken, signCookie, signRefreshToken, hashPassword, comparePasswords} from "../utils/shared";
 import { userSchema, logInSchema } from "../validator";
 import { type JwtPayload, type User } from "../utils/types";
+import { storeRefreshToken } from "../middleware/auth-middleware";
 dotenv.config()
 
 const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults:true})
@@ -78,14 +79,18 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
         FROM users 
         WHERE password_hash = ${hashedPassword.rows[0].password_hash} AND email = ${body.email}
         `
-
+        console.log(payload.rows[0].id)
 
         /// Signing tokens
-        const accessToken = await signAccessToken({userId: payload.rows[0].user_id, email: payload.rows[0].email});
-        const refreshToken = await signRefreshToken({userId: payload.rows[0].user_id, email: payload.rows[0].email});
+        const accessToken = await signAccessToken({userId: payload.rows[0].id, email: payload.rows[0].email});
+        const refreshToken = await signRefreshToken({userId: payload.rows[0].id, email: payload.rows[0].email});
+        
+
+        await storeRefreshToken(payload.rows[0].id, refreshToken);
 
         /// Signing cookie
         res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
+        res.cookie("RefreshToken", refreshToken, {maxAge: 15*60 * 1000, httpOnly: true, secure: true, sameSite:true})
 
         return res.status(200).send("You have logged in successfully")
     }catch(error){
@@ -114,7 +119,7 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
 
 
 export const findUser = async(req: Request, res: Response): Promise<Response> => {
-    
+
     /// ID of the desired user
     const {id} = req.params;
 
