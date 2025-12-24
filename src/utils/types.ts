@@ -42,3 +42,14 @@ export interface Round{
     reflect?: string | null,
     number: number
 }
+
+
+export const AllowedFilters = {
+        status: 'status',
+        title: 'job_title',
+        person: 'reached_person',
+        company: 'company',
+        date: 'created_at',
+        user_id: 'user_id',
+        id: 'id'
+    }

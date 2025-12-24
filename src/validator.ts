@@ -39,3 +39,8 @@ export const noteSchema = Joi.object({
     prepare_note: Joi.string(),
     reflection_note: Joi.string(),
 })
+
+
+export const filterSchema = Joi.object({
+    filter: Joi.string().valid('status', 'title', 'person', 'company', 'date', 'user_id', 'id').required()
+});
