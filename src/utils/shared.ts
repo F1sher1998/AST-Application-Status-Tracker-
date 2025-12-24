@@ -5,6 +5,8 @@ import { type CookiePayload, type JwtPayload } from './types';
 import type { Response } from 'express';
 
 
+
+/// JWT functions
 const AcessExpiry = "15m"
 
 export const signAccessToken = async(payload: JwtPayload): Promise<string> => {
@@ -23,6 +25,7 @@ export const verifyToken = async(token: string) => {
 };
 
 
+/// Cookie functions
 export const signCookie = async(res: Response, value: string, name: string, time: number): Promise<any> => {
     return res.cookie(value, name, {maxAge: time, secure:true, httpOnly:true})
 };
@@ -33,6 +36,8 @@ export const clearCookie = async(res: Response, payload: CookiePayload) => {
 };
 
 
+
+/// Password hashing functions
 export const hashPassword = async(password: string): Promise<string> => {
   const hashed = await bcrypt.hash(password, 10)
   return hashed;
