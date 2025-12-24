@@ -7,6 +7,7 @@ import { sql } from "../db/Neon/neon-client";
 
 
 export const createRound = async(req: Request, res:Response): Promise<Response> => {
+
     /// Validating request body
     const accessToken = req.cookies.AccessToken
     if(!accessToken) res.status(405).send("You are not authorized!")
@@ -27,7 +28,6 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
     if(existingRound.length > 0) return res.status(400).send(`This application already has an interview number ${body.number}`);
 
 
-    
     /// Create a round
     try{
         const [round] = await sql.transaction([sql`
@@ -49,8 +49,10 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
 
 export const addNotes = async(req: Request, res:Response): Promise<Response> =>  {
 
+    /// Request parameters 
     const { userId, appId } = req.params
 
+    /// Validating request body
     const {error, value} = noteSchema.validate(req.body);
 
     /// Check for validation error
@@ -58,14 +60,16 @@ export const addNotes = async(req: Request, res:Response): Promise<Response> => 
         return res.status(400).json({errors: error.details.map(d => d.message)})
     }
 
+    /// Assign validated values
     const body = value
 
+
+    /// deconstructing request body
     const keys = Object.keys(body);
     const setClause = keys.map((key) => `${key}`).join(', ');
     const values = Object.values(body)[0];
 
-    console.log(setClause)
-
+    /// Adding/Updating notes
     try{
         const [note] = await sql.transaction([sql`
             UPDATE rounds SET ${sql.unsafe(setClause)} = ${values}
@@ -73,8 +77,10 @@ export const addNotes = async(req: Request, res:Response): Promise<Response> => 
             RETURNING *
             `]);
 
+        /// Success message
         return res.status(201).json({message: "Note was updated", note:  note})
- 
+    
+    /// Error message
     }catch(error){
         console.log("Error has occured while updating/adding notes")
         return res.status(500).json({message: "Internal server error", error: error})

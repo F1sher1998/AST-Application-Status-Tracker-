@@ -11,6 +11,7 @@ const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATAB
 /// Creating user controllers
 
 export const createUser = async(req: Request, res: Response): Promise<Response> => {
+
     /// Receive and validate request body
     const {error, value} = userSchema.validate(req.body);
 
@@ -30,10 +31,10 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
     
     /// Creating a user
     try{
+
+        /// Hashing password
         const hashedPassword = await hashPassword(body.password)
 
-
-        /// Create query
         const [newUser] = await sql.transaction([
             sql`INSERT INTO users (name, email, password_hash)
             VALUES(${body.name}, ${body.email}, ${hashedPassword})
@@ -61,25 +62,30 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
     const body = value as User
 
     
+    /// Login user
     try{
+
+        /// Fetching hashed password from the database
         const hashedPassword = await sql`SELECT password_hash FROM users WHERE email = ${body.email}`
 
+        /// Compare provided password with the hashed password
         const verified = await comparePasswords(body.password, hashedPassword.rows[0].password_hash)
-
         if(!verified) return res.status(400).send("Password is incorrect");
 
+        /// Creating user paylaod
         const payload = await sql`
         SELECT id, email 
         FROM users 
         WHERE password_hash = ${hashedPassword.rows[0].password_hash} AND email = ${body.email}
         `
 
+
+        /// Signing tokens
         const accessToken = await signAccessToken({userId: payload.rows[0].user_id, email: payload.rows[0].email});
         const refreshToken = await signRefreshToken({userId: payload.rows[0].user_id, email: payload.rows[0].email});
 
-
+        /// Signing cookie
         res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
-        res.cookie("RefreshToken", refreshToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
 
         return res.status(200).send("You have logged in successfully")
     }catch(error){
@@ -88,6 +94,7 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
 }
 
 export const findAllUsers = async(req: Request, res: Response): Promise<Response> =>{
+
     /// Searching for users
     try{
         const users = await sql`SELECT name, id FROM users`
@@ -107,9 +114,9 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
 
 
 export const findUser = async(req: Request, res: Response): Promise<Response> => {
+    
     /// ID of the desired user
     const {id} = req.params;
-
 
     /// Check if ID was provided
     if(!req.params.id) return res.status(400).send("You haven't provided user's id");
