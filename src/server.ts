@@ -5,6 +5,7 @@ import userRouter from "./routes/user-routes"
 import applicationRouter from "./routes/application-routes"
 import roundRouter from './routes/round-routes'
 import cookieParser from "cookie-parser";
+import { redisClient } from "./db/Redis/redis-client";
 
 
 dotenv.config()
@@ -27,6 +28,11 @@ app.use("/rounds", roundRouter)
 
 
 //connection
+
+// Start Redis Client
+await redisClient.connect();
+
+// start server
 app.listen(process.env.PORT, () => {
     console.log(`Server is runnig on PORT ${process.env.PORT}`)
 }).on('error', () =>{
