@@ -1,4 +1,3 @@
-import { neon } from "@neondatabase/serverless";
 import type { Request, Response } from "express";
 import { roundSchema, noteSchema } from "../validator";
 import { type Round } from "../utils/types";

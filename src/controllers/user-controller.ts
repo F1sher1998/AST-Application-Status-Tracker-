@@ -1,10 +1,11 @@
 import { neon } from "@neondatabase/serverless";
 import type{ Request, Response} from 'express'
 import dotenv from 'dotenv'
-import { signAccessToken, signCookie, signRefreshToken, hashPassword, comparePasswords} from "../utils/shared";
+import { signAccessToken, signRefreshToken, hashPassword, comparePasswords} from "../utils/shared";
 import { userSchema, logInSchema } from "../validator";
-import { type JwtPayload, type User } from "../utils/types";
+import { type User } from "../utils/types";
 import { storeRefreshToken } from "../middleware/auth-middleware";
+
 dotenv.config()
 
 const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults:true})

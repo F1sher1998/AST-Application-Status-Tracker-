@@ -1,4 +1,3 @@
-import { neon } from "@neondatabase/serverless";
 import type { Request, Response } from "express";
 import { applicationSchema } from "../validator";
 import { type Application, AllowedFilters } from "../utils/types";
