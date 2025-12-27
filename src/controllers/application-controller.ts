@@ -44,19 +44,26 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
 }
 
 export const findAllApplications = async(req: Request, res:Response): Promise<Response> => {
-
+    const { userId } = req.params
 
     /// Finding applications
     try{
 
         /// Extracting applications
-        const applications = await sql`SELECT id, job_title, status, application_date FROM applications`
+        const applications = await sql`SELECT id, job_title, status, application_date FROM applications WHERE user_id = ${userId}`
         
         /// Check If no applications found
         if(applications.rowCount < 1) return res.status(400).send("There are no applications");
 
         /// Success message
-        return res.status(200).json({ applications: applications.rows });
+        return res.status(200).json({ 
+            applications: {
+                id: applications.rows[0].id, 
+                title: applications.rows[0].job_title,
+                status: applications.rows[0].status,
+                date: applications.rows[0].application_date
+            } 
+        });
     /// Error message
     }catch(error){
         console.log("Error has occured during finding all applications")

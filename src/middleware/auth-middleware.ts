@@ -42,13 +42,13 @@ export const storeRefreshToken = async(userId: string, token: string) => {
 /// Refresh token function
 export const refreshTokens = async(req: Request, res: Response, next: NextFunction) => {
     const cookieToken = req.cookies.RefreshToken
-    if(!cookieToken) return res.status(405).send("Login again please")
+    if(!cookieToken) return res.status(405).json("Login again please")
 
     const verifiedCookie = await verifyToken(cookieToken)
-    if(!verifiedCookie) return res.status(405).send("Unauthorized!")
+    if(!verifiedCookie) return res.status(405).json("Unauthorized!")
 
     const storedToken = await redisClient.hGet(`refresh_token:${verifiedCookie.id}`, "token") as string
-    if(!storedToken) return res.status(405).send("Refresh token is expired within Redis")
+    if(!storedToken) return res.status(405).json("Refresh token is expired within Redis")
 
     const payload = await userPayload(verifiedCookie.id)
 

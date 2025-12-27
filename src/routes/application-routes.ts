@@ -6,7 +6,7 @@ const router = Router()
 
 router.post("/:userId", isAuthenticated, applicationController.createApplication)
 router.get("/:filterType/:value", isAuthenticated, applicationController.FilterApplications)
-router.get("", isAuthenticated, applicationController.findAllApplications)
+router.get("/:userId", isAuthenticated, applicationController.findAllApplications)
 router.patch("/:appId", isAuthenticated, applicationController.updateApplicationStatus)
 
 export default router
