@@ -5,9 +5,9 @@ const router = Router()
 
 
 
-router.post("", isAuthenticated, userController.createUser)
+router.post("", userController.createUser)
 router.get("", isAuthenticated, userController.findAllUsers)
 router.get("/:id", isAuthenticated, userController.findUser)
-router.post("/login", isAuthenticated, userController.logInUser)
+router.post("/login", userController.logInUser)
 
 export default router

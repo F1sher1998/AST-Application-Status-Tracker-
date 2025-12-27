@@ -24,11 +24,11 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
 
     /// Assign validated values
     const body = value as User
-    
+    console.log(body)
 
     /// Checking if the email is already in use
     const existingEmail = await sql`SELECT id FROM users WHERE email = ${body.email}`;
-    if(!existingEmail){
+    if(existingEmail.rows.length > 1){
         return res.status(400).send('User with this email already exists')};///-->> reaplace
     
     /// Creating a user
@@ -91,7 +91,7 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
 
         /// Signing cookie
         res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
-        res.cookie("RefreshToken", refreshToken, {maxAge: 15*60 * 1000, httpOnly: true, secure: true, sameSite:true})
+        res.cookie("RefreshToken", refreshToken, {maxAge: 7 * 24 * 60 * 1000, httpOnly: true, secure: true, sameSite:"lax"})
 
         return res.status(200).send("You have logged in successfully")
     }catch(error){

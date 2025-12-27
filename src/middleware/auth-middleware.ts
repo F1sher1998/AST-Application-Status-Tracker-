@@ -31,7 +31,7 @@ export const storeRefreshToken = async(userId: string, token: string) => {
 
     /// creating hash
     await redisClient.HSET(`refresh_token:${userId}`, {sub: `${userId}`, iat: `${date}`, token: `${token}`});
-    await redisClient.EXPIRE(`refresh_token:${userId}`, 120);
+    await redisClient.EXPIRE(`refresh_token:${userId}`, 604800);
 }
 
 
@@ -65,10 +65,4 @@ export const userPayload = async(userId:string) => {
     const payload = await sql`SELECT email, id FROM users WHERE id = ${userId}`
 
     return {email: payload[0].email, id: payload[0].id}
-}
-
-
-export const checkIfHashExists = async(userId: string, next: NextFunction) => {
-    const existingToken = await redisClient.hGetAll(`refresh_token:${userId}`)
-    if(existingToken) return null
 }
