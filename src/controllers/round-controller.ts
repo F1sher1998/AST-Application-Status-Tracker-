@@ -8,6 +8,7 @@ const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATAB
 export const createRound = async(req: Request, res:Response): Promise<Response> => {
 
     const {error, value} = roundSchema.validate(req.body)
+    const { userId, appId } = req.params;
 
     /// Check for validation error
     if(error){
@@ -18,7 +19,7 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
     const body = value as Round
 
     /// Check if this round already exists within this interview
-    const existingRound = await sql`SELECT * FROM rounds WHERE user_id = ${body.userId} AND application_id = ${body.appId} AND interview_number = ${body.number}`
+    const existingRound = await sql`SELECT * FROM rounds WHERE user_id = ${userId} AND application_id = ${appId} AND interview_number = ${body.number}`
     if(existingRound.rowCount > 0) return res.status(400).send(`This application already has an interview number ${body.number}`);
 
 
