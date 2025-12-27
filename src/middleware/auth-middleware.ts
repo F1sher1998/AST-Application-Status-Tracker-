@@ -11,7 +11,10 @@ export const isAuthenticated = async(req: Request, res: Response, next: NextFunc
     /// Check for access token in cookies
     const accessToken = req.cookies.AccessToken;
     
-    if(!accessToken) return refreshTokens(req, res, next) 
+    if(!accessToken) return refreshTokens(req, res, next);
+
+    const verified = verifyToken(accessToken)
+    if(!verified) return res.status(405).send("Unauthorized!")
 
     return next()
 }
@@ -42,10 +45,10 @@ export const refreshTokens = async(req: Request, res: Response, next: NextFuncti
     if(!cookieToken) return "Login again please"
 
     const verifiedCookie = await verifyToken(cookieToken)
-    if(!verifiedCookie) return "Refresh Token is falsy"
+    if(!verifiedCookie) return res.status(405).send("Unauthorized!")
 
     const storedToken = await redisClient.hGet(`refresh_token:${verifiedCookie.id}`, "token") as string
-    if(!storedToken) return "Refresh token is expired within Redis"
+    if(!storedToken) return res.status(405).send("Refresh token is expired within Redis")
 
     const payload = await userPayload(verifiedCookie.id)
 
