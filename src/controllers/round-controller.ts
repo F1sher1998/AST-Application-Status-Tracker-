@@ -27,7 +27,7 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
     try{
         const [round] = await sql.transaction([sql`
             INSERT INTO rounds (user_id, application_id, interview_number, prepare_note, reflection_note)
-            VALUES (${body.userId}, ${body.appId}, ${body.number}, ${body.prepare}, ${body.reflect})
+            VALUES (${userId}, ${appId}, ${body.number}, ${body.prepare}, ${body.reflect})
             RETURNING *
             `]);
 

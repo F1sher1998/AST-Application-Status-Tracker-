@@ -42,7 +42,7 @@ export const storeRefreshToken = async(userId: string, token: string) => {
 /// Refresh token function
 export const refreshTokens = async(req: Request, res: Response, next: NextFunction) => {
     const cookieToken = req.cookies.RefreshToken
-    if(!cookieToken) return "Login again please"
+    if(!cookieToken) return res.status(405).send("Login again please")
 
     const verifiedCookie = await verifyToken(cookieToken)
     if(!verifiedCookie) return res.status(405).send("Unauthorized!")
