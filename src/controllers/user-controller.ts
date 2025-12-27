@@ -93,7 +93,13 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
         res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
         res.cookie("RefreshToken", refreshToken, {maxAge: 7 * 24 * 60 * 1000, httpOnly: true, secure: true, sameSite:"lax"})
 
-        return res.status(200).send("You have logged in successfully")
+        return res.status(200).send({message: "You have logged in successfully", 
+            user: {
+            id: payload.rows[0].id,
+            email: payload.rows[0].email
+        }
+    });
+    
     }catch(error){
         return res.status(500).json({message: "Internal server error", error: error})
     }
