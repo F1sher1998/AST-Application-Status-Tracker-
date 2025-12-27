@@ -29,8 +29,8 @@ export const applicationSchema = Joi.object({
 export const roundSchema = Joi.object({
     userId: Joi.number(),
     appId: Joi.number(),
-    prepare: Joi.string(),
-    reflect: Joi.string(),
+    prepare: Joi.string().allow(null, ''),
+    reflect: Joi.string().allow(null, ''),
     number: Joi.number().required()
 })
 

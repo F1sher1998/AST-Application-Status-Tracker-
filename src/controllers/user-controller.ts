@@ -24,12 +24,12 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
 
     /// Assign validated values
     const body = value as User
-    console.log(body)
+
 
     /// Checking if the email is already in use
     const existingEmail = await sql`SELECT id FROM users WHERE email = ${body.email}`;
     if(existingEmail.rows.length > 1){
-        return res.status(400).send('User with this email already exists')};///-->> reaplace
+        return res.status(400).send('User with this email already exists')};
     
     /// Creating a user
     try{
@@ -40,19 +40,27 @@ export const createUser = async(req: Request, res: Response): Promise<Response> 
         const [newUser] = await sql.transaction([
             sql`INSERT INTO users (name, email, password_hash)
             VALUES(${body.name}, ${body.email}, ${hashedPassword})
-            RETURNING id, created_at`
+            RETURNING name, id`
         ]);
         
         /// success message
-        return res.status(201).json({message: "User has been create", user: newUser})///-->> reaplace
+        return res.status(201).json({message: "User has been create", user: 
+            {
+                name: newUser.rows[0].id, 
+                email: newUser.rows[0].email}
+            })
     
     /// error message
     }catch(error){
         console.log("The error has occured during user creatin")
-        return res.status(500).json({message: "Internal server error", error: error.name})///-->> reaplace
+        return res.status(500).json({message: "Internal server error", error: error.name})
     }
 
 }
+
+
+
+
 
 export const logInUser = async(req: Request, res: Response): Promise<Response> => {
     const { error, value } = logInSchema.validate(req.body);
@@ -63,7 +71,6 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
 
     const body = value as User
 
-    
     /// Login user
     try{
 
@@ -80,7 +87,6 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
         FROM users 
         WHERE password_hash = ${hashedPassword.rows[0].password_hash} AND email = ${body.email}
         `
-        console.log(payload.rows[0].id)
 
         /// Signing tokens
         const accessToken = await signAccessToken({userId: payload.rows[0].id, email: payload.rows[0].email});
@@ -99,11 +105,15 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
             email: payload.rows[0].email
         }
     });
-    
+
     }catch(error){
         return res.status(500).json({message: "Internal server error", error: error})
     }
 }
+
+
+
+
 
 export const findAllUsers = async(req: Request, res: Response): Promise<Response> =>{
 
@@ -123,6 +133,10 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
         return res.status(500).json({message: "Internal server error", error: error.name})
     } 
 }
+
+
+
+
 
 
 export const findUser = async(req: Request, res: Response): Promise<Response> => {

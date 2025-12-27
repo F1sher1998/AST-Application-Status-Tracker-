@@ -1,10 +1,11 @@
 import type { Request, Response } from "express";
 import { applicationSchema } from "../validator";
 import { type Application, AllowedFilters } from "../utils/types";
-import { sql } from "../db/Neon/neon-client";
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults:true})
 
 export const createApplication = async(req: Request, res:Response): Promise<Response> => {
-
 
     /// Application mandatory data
     const { error, value } = applicationSchema.validate(req.body);
@@ -24,7 +25,15 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
             `]);
 
         /// Success message
-        return res.status(201).json({message: "Application has been created", application: application})
+        return res.status(201).json({
+            message: "Application has been created", 
+            application: {
+                title: application.rows[0].job_title,
+                status: application.rows[0].status,
+                company: application.rows[0].company,
+                date: application.rows[0].application_date
+            }
+        });
 
     /// Error message
     }catch(error){
@@ -43,10 +52,16 @@ export const findAllApplications = async(req: Request, res:Response): Promise<Re
         const applications = await sql`SELECT id, job_title, status, application_date FROM applications`
         
         /// Check If no applications found
-        if(applications.length < 1) return res.status(400).send("There are no applications");
+        if(applications.rowCount < 1) return res.status(400).send("There are no applications");
 
         /// Success message
-        return res.status(200).json({applications: applications})
+        return res.status(200).json({applications: {
+            id: applications.rows[0].id,
+            title: applications.rows[0].title,
+            status: applications.rows[0].status,
+            date: applications.rows[0].application_date
+        }
+    });
 
     /// Error message
     }catch(error){
@@ -57,41 +72,25 @@ export const findAllApplications = async(req: Request, res:Response): Promise<Re
 
 export const FilterApplications = async(req: Request, res:Response): Promise<Response> => {
 
-    /// Allowed filters
-    const filters = AllowedFilters;
+    const { columnName, value } = req.body;
+    if(!req.body) return res.status(400).json({message: "You havent entered necessary fields"});
 
-    /// Parameter of desired applications
-    const {filterType, value} = req.params;
+    const allowedColumns = ['status', 'application_date', 'job_title', 'company']
+    if(!allowedColumns.includes(columnName)) return res.status(400).json({message: "Invalid column"})
 
-    /// Check if filter type is valid
-    if(!(filterType in filters)){
-        return res.status(400).send("You have provided an invalid filter type")
-    }
-
-    /// Chosen filter type for query
-    const chosenFilter = filterType as keyof typeof filters;
-    
-
-    /// Search for an existing applications
     try{
-        const filteredApplications = await sql`
-        SELECT id, job_title, application_date
-        FROM applications
-        WHERE ${sql.unsafe(chosenFilter)} = ${value}`;
-
-
-        /// Check if any application were found
-        if(filteredApplications.length < 1) return res.status(400).send("No items were found");
-
-        /// Success message
-        return res.status(200).json({applications: filteredApplications})
-
-    /// Error message
+        const result = await sql`SELECT * FROM applications WHERE ${sql(columnName)} = ${value}`
+        //const result = await sql`SELECT * FROM format('SELECT * FROM applications WHERE %I = $L', ${columnName}, ${value})`
+        return res.status(200).json({applications: {
+            id: result.rows[0].id,
+            title: result.rows[0].title,
+            status: result.rows[0].status,
+            date: result.rows[0].application_date
+        }
+    });
     }catch(error){
-        console.log("Error has occured during filtering applications!")
-        return res.status(500).json({message: "Internal server error", error: error});
-    } 
-    
+        return res.status(500).json({message: "Internal server error"})
+    }
 }
 
 export const updateApplicationStatus = async(req: Request, res:Response): Promise<Response> => {
@@ -104,7 +103,7 @@ export const updateApplicationStatus = async(req: Request, res:Response): Promis
     
     /// Update application status
     try{
-        const updatedApplication = await sql.transaction([sql`
+        const [updatedApplication] = await sql.transaction([sql`
             UPDATE applications
             SET status = ${status}
             WHERE id = ${appId}
@@ -112,7 +111,11 @@ export const updateApplicationStatus = async(req: Request, res:Response): Promis
         `]);
 
         /// Success message
-        return res.status(200).json({message: "Application status has been updated", application: updatedApplication})
+        return res.status(200).json({message: "Application status has been updated", application: {
+            id: updatedApplication.rows[0].id,
+            title: updatedApplication.rows[0].job_title,
+            status: updatedApplication.rows[0].status
+        }})
 
     /// Error message
     }catch(error){
