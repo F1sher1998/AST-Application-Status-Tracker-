@@ -45,7 +45,7 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
     /// Error message
     }catch(error){
         console.log("Error has occured during creating a round")
-        return res.status(500).json({messae: "Internal message error", error: error})
+        return res.status(500).json({message: "Internal message error", error: error})
     }
 }
 

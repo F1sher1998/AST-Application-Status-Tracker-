@@ -142,7 +142,7 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
 export const findUser = async(req: Request, res: Response): Promise<Response> => {
 
     /// ID of the desired user
-    const userId = req.body
+    const {userId} = req.body
 
     /// Check if ID was provided
     if(!req.body.id) return res.status(400).send("You haven't provided user's id");
