@@ -48,25 +48,3 @@ export const comparePasswords = async(password: string, hashed: string): Promise
   const compared = await bcrypt.compare(password, hashed)
   return compared;
 }
-
-
-export const checkLastTouch = async(appId: string) => {
-  const [lastTouch] = await sql`SELECT last_touch FROM applications WHERE id = ${appId}`
-
-  if(lastTouch.last_touch === null) return
-
-  const today = new Date()
-  const dbDate = new Date(lastTouch.last_touch)
-
-  const diff = today.getTime() - dbDate.getTime()
-
-  const diffInDays = Math.round(diff/(1000 * 60 * 60 * 24))
-
-  if(diffInDays > 5) try{
-    sql.transaction([
-      sql`UPDATE application SET status = rejected WHERE id = ${appId}`
-    ])
-  }catch(error){
-    return error
-  }
-} /// -->> Usage when DOM is available
