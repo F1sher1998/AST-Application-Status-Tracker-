@@ -5,9 +5,13 @@ const router = Router()
 
 
 
-router.post("", userController.createUser)
+router.post("/create", userController.createUser)
 router.post("/login", userController.logInUser)
-router.get("", isAuthenticated, userController.findAllUsers)
-router.get("/:id", isAuthenticated, userController.findUser)
+
+
+router.get("me", isAuthenticated, userController.getCurrentUser)
+
+router.get("all", isAuthenticated, userController.findAllUsers)
+router.get("one", isAuthenticated, userController.findUser)
 
 export default router

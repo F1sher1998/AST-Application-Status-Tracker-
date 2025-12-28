@@ -96,7 +96,7 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
         await storeRefreshToken(payload.rows[0].id, refreshToken);
 
         /// Signing cookie
-        res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
+        res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: false, secure: true})
         res.cookie("RefreshToken", refreshToken, {maxAge: 7 * 24 * 60 * 1000, httpOnly: true, secure: true, sameSite:"lax"})
 
         return res.status(200).send({message: "You have logged in successfully", 
@@ -142,20 +142,20 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
 export const findUser = async(req: Request, res: Response): Promise<Response> => {
 
     /// ID of the desired user
-    const {id} = req.params;
+    const userId = req.body
 
     /// Check if ID was provided
-    if(!req.params.id) return res.status(400).send("You haven't provided user's id");
+    if(!req.body.id) return res.status(400).send("You haven't provided user's id");
 
     /// Search for an existing user
-    const existingUser = await sql`SELECT email FROM users WHERE id = ${parseInt(id)}`
+    const existingUser = await sql`SELECT email FROM users WHERE id = ${parseInt(userId)}`
 
     /// Check if user with this ID exists 
     if(!existingUser) return res.status(400).send("User with this id doesnt exists");
 
     /// Extract existing user
     try{
-        const user = await sql`SELECT name, id FROM users WHERE id = ${id}`
+        const user = await sql`SELECT name, id FROM users WHERE id = ${userId}`
 
         /// Success message
         return res.status(200).json({users: user})
@@ -167,3 +167,31 @@ export const findUser = async(req: Request, res: Response): Promise<Response> =>
     }
 }
 
+
+
+
+
+export const getCurrentUser = async(req: Request, res: Response): Promise<Response> => {
+    try{
+        if(!req.user || !req.user.id){
+            return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        const user = await sql`
+        SELECT id, email, created_at
+        FROM users
+        WHERE id = ${req.user.id}
+        `;
+
+        if(user.rowCount === 0){
+            return res.status(404).json({message: "User not found"});
+        }
+
+        return res.status(200).json({
+            user: user[0]
+        })
+    }catch (error) {
+        console.log("Error getting current user:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}

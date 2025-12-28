@@ -9,7 +9,8 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
 
     /// Application mandatory data
     const { error, value } = applicationSchema.validate(req.body);
-    const { userId } = req.params;
+    const userId = req.user!.id
+
     if(error){
         return res.status(400).json({errors: error.details.map(d => d.message)})
     }
@@ -44,7 +45,7 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
 }
 
 export const findAllApplications = async(req: Request, res:Response): Promise<Response> => {
-    const { userId } = req.params
+    const userId = req.user!.id
 
     /// Finding applications
     try{
@@ -73,6 +74,8 @@ export const findAllApplications = async(req: Request, res:Response): Promise<Re
 
 export const FilterApplications = async(req: Request, res:Response): Promise<Response> => {
 
+    const userId = req.user!.id
+
     const { columnName, value } = req.body;
     if(!req.body) return res.status(400).json({message: "You havent entered necessary fields"});
 
@@ -80,7 +83,7 @@ export const FilterApplications = async(req: Request, res:Response): Promise<Res
     if(!allowedColumns.includes(columnName)) return res.status(400).json({message: "Invalid column"})
 
     try{
-        const result = await sql`SELECT * FROM applications WHERE ${sql(columnName)} = ${value}`
+        const result = await sql`SELECT * FROM applications WHERE ${sql(columnName)} = ${value} AND user_id = ${userId}`
         //const result = await sql`SELECT * FROM format('SELECT * FROM applications WHERE %I = $L', ${columnName}, ${value})`
         return res.status(200).json({ applications: result.rows });
     }catch(error){
@@ -90,6 +93,7 @@ export const FilterApplications = async(req: Request, res:Response): Promise<Res
 
 export const updateApplicationStatus = async(req: Request, res:Response): Promise<Response> => {
     
+    const userId = req.user!.id
     const { appId } = req.params;
     const { status } = req.body;
 
@@ -101,7 +105,7 @@ export const updateApplicationStatus = async(req: Request, res:Response): Promis
         const [updatedApplication] = await sql.transaction([sql`
             UPDATE applications
             SET status = ${status}
-            WHERE id = ${appId}
+            WHERE id = ${appId} AND user_id = ${userId}
             RETURNING id, job_title, status
         `]);
 

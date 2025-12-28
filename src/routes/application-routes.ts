@@ -4,9 +4,9 @@ import { isAuthenticated } from '../middleware/auth-middleware';
 const router = Router()
 
 
-router.post("/:userId", isAuthenticated, applicationController.createApplication)
-router.get("/:filterType/:value", isAuthenticated, applicationController.FilterApplications)
-router.get("/:userId", isAuthenticated, applicationController.findAllApplications)
+router.post("/create", isAuthenticated, applicationController.createApplication)
+router.get("/filter/:filterType/:value", isAuthenticated, applicationController.FilterApplications)
+router.get("all", isAuthenticated, applicationController.findAllApplications)
 router.patch("/:appId", isAuthenticated, applicationController.updateApplicationStatus)
 
 export default router

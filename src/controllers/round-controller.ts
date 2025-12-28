@@ -8,7 +8,8 @@ const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATAB
 export const createRound = async(req: Request, res:Response): Promise<Response> => {
 
     const {error, value} = roundSchema.validate(req.body)
-    const { userId, appId } = req.params;
+    const { appId } = req.params;
+    const userId = req.user!.id
 
     /// Check for validation error
     if(error){
@@ -51,8 +52,9 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
 
 export const addNotes = async(req: Request, res:Response): Promise<Response> =>  {
 
-    /// Request parameters 
-    const { userId, appId } = req.params
+    /// Request parameters
+    const { appId } = req.params
+    const userId = req.user!.id
 
     /// Validating request body
     const {error, value} = noteSchema.validate(req.body);
@@ -98,11 +100,12 @@ export const addNotes = async(req: Request, res:Response): Promise<Response> => 
 
 export const findRounds = async(req: Request, res: Response): Promise<Response> => {
     const { appId } = req.params;
+    const userId = req.user!.id
 
     try{
         const rounds = await sql`
         SELECT * FROM rounds
-        WHERE application_id = ${appId}
+        WHERE application_id = ${appId} AND user_id = ${userId}
         ORDER BY interview_number ASC
         `;
 

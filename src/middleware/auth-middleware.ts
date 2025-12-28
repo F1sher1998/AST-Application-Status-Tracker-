@@ -5,6 +5,17 @@ import { sql } from '../db/Neon/neon-client';
 import { redisClient } from '../db/Redis/redis-client';
 
 
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+      };
+    }
+  }
+}
+
 /// Auth middleware itself
 export const isAuthenticated = async(req: Request, res: Response, next: NextFunction) => {
 
@@ -13,10 +24,18 @@ export const isAuthenticated = async(req: Request, res: Response, next: NextFunc
     
     if(!accessToken) return refreshTokens(req, res, next);
 
-    const verified = verifyToken(accessToken)
-    if(!verified) return res.status(405).send("Unauthorized!")
 
-    return next()
+    try{
+        const verified = await verifyToken(accessToken);
+
+        if(!verified) return res.status(401).send("Unauthorized!");
+
+        req.user = verified;
+
+        return next();
+    }catch(error){
+        return res.status(403).send("Invalid Token");
+    }
 }
 
 
