@@ -61,23 +61,25 @@ export const storeRefreshToken = async(userId: string, token: string) => {
 /// Refresh token function
 export const refreshTokens = async(req: Request, res: Response, next: NextFunction) => {
     const cookieToken = req.cookies.RefreshToken
-    if(!cookieToken) return res.status(405).json("Login again please")
+    if(!cookieToken) return res.status(401).json({message: "Login again please"})
 
     const verifiedCookie = await verifyToken(cookieToken)
-    if(!verifiedCookie) return res.status(405).json("Unauthorized!")
+    if(!verifiedCookie) return res.status(401).json({message: "Unauthorized!"})
 
     const storedToken = await redisClient.hGet(`refresh_token:${verifiedCookie.id}`, "token") as string
-    if(!storedToken) return res.status(405).json("Refresh token is expired within Redis")
+    if(!storedToken) return res.status(401).json({message: "Refresh token is expired within Redis"})
 
     const payload = await userPayload(verifiedCookie.id)
 
     const accessToken = await signAccessToken({userId: payload.id, email: payload.email});
     const refreshToken = await signRefreshToken({userId: payload.id, email: payload.email});
 
-    res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: true, secure: true})
-    res.cookie("RefreshToken", refreshToken, {maxAge: 15*60 * 1000, httpOnly: true, secure: true, sameSite:true})
+    res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: false, secure: false, sameSite:"lax"})
+    res.cookie("RefreshToken", refreshToken, {maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true, secure: false, sameSite:"lax"})
 
     await storeRefreshToken(payload.id, refreshToken)
+
+    req.user = {id: payload.id, email: payload.email}
     
     return next()
 }

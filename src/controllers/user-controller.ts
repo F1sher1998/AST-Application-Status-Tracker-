@@ -71,44 +71,55 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
 
     const body = value as User
 
-    /// Login user
     try{
 
-        /// Fetching hashed password from the database
-        const hashedPassword = await sql`SELECT password_hash FROM users WHERE email = ${body.email}`
+        /// Fetching user from database
+        const userResult = await sql`SELECT id, email, password_hash FROM users WHERE email = ${body.email}`
+        
+        if(userResult.rows.length === 0) {
+            return res.status(400).json({message: "Invalid email or password"});
+        }
+
+        const user = userResult.rows[0];
 
         /// Compare provided password with the hashed password
-        const verified = await comparePasswords(body.password, hashedPassword.rows[0].password_hash)
-        if(!verified) return res.status(400).send("Password is incorrect");
-
-        /// Creating user paylaod
-        const payload = await sql`
-        SELECT id, email 
-        FROM users 
-        WHERE password_hash = ${hashedPassword.rows[0].password_hash} AND email = ${body.email}
-        `
+        const verified = await comparePasswords(body.password, user.password_hash)
+        if(!verified) return res.status(400).json({message: "Invalid email or password"});
 
         /// Signing tokens
-        const accessToken = await signAccessToken({userId: payload.rows[0].id, email: payload.rows[0].email});
-        const refreshToken = await signRefreshToken({userId: payload.rows[0].id, email: payload.rows[0].email});
+        const accessToken = await signAccessToken({userId: user.id, email: user.email});
+        const refreshToken = await signRefreshToken({userId: user.id, email: user.email});
         
+        await storeRefreshToken(user.id, refreshToken);
 
-        await storeRefreshToken(payload.rows[0].id, refreshToken);
+        /// Setting cookies with proper configuration
+        res.cookie("AccessToken", accessToken, {
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            httpOnly: false, // Allow JS to read it (set true in production)
+            secure: false, // Set to true in production with HTTPS
+            sameSite: 'lax'
+        })
+        
+        res.cookie("RefreshToken", refreshToken, {
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            httpOnly: true,
+            secure: false, // Set to true in production with HTTPS
+            sameSite: 'lax'
+        })
 
-        /// Signing cookie
-        res.cookie("AccessToken", accessToken, {maxAge: 15 * 60 * 1000, httpOnly: false, secure: true})
-        res.cookie("RefreshToken", refreshToken, {maxAge: 7 * 24 * 60 * 1000, httpOnly: true, secure: true, sameSite:"lax"})
-
-        return res.status(200).send({message: "You have logged in successfully", 
+        return res.status(200).json({
+            message: "You have logged in successfully", 
             user: {
-            id: payload.rows[0].id,
-            email: payload.rows[0].email
-        }
-    });
+                id: user.id,
+                email: user.email
+            }
+        });
 
     }catch(error){
+        console.error('Login error:', error);
         return res.status(500).json({message: "Internal server error", error: error})
     }
+    
 }
 
 

@@ -14,7 +14,7 @@ export const signAccessToken = async(payload: JwtPayload): Promise<string> => {
 
 
 export const signRefreshToken = async(payload: JwtPayload): Promise<string> => {
-    return jwt.sign({id: payload.userId, email: payload.email}, process.env.JWT_SECRET!, {expiresIn: '15m'})};
+    return jwt.sign({id: payload.userId, email: payload.email}, process.env.JWT_SECRET!, {expiresIn: '7d'})};
 
 
 export const verifyToken = async(token: string) => {
