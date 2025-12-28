@@ -107,6 +107,10 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
             sameSite: 'lax'
         })
 
+
+        req.user = {id: user.id, email: user.email};
+        
+
         return res.status(200).json({
             message: "You have logged in successfully", 
             user: {
