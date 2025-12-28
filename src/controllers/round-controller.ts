@@ -68,28 +68,19 @@ export const addNotes = async(req: Request, res:Response): Promise<Response> => 
     const body = value
 
 
-    /// deconstructing request body
-    const keys = Object.keys(body);
-    const setClause = keys.map((key) => `${key}`).join(', ');
-    const values = Object.values(body)[0];
-
     /// Adding/Updating notes
     try{
-        const [note] = await sql.transaction([sql`
-            UPDATE rounds SET ${sql.unsafe(setClause)} = ${values}
+        
+        const note = await sql`
+            UPDATE rounds
+            SET ${sql(body)}
             WHERE user_id = ${userId} AND application_id = ${appId}
             RETURNING *
-            `]);
-
-        /// Success message
-        return res.status(201).json({
+        `
+        return res.status(200).json({ // Changed 201 to 200 (201 is for creation)
             message: "Note was updated", 
-            notes: {
-                prepare: note.rows[0].prepare_note, 
-                reflect: note.rows[0].reflection_note
-            }
-        })
-    
+            notes: note.rows
+        });
     /// Error message
     }catch(error){
         console.log("Error has occured while updating/adding notes")
