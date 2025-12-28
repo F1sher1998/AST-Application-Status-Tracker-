@@ -34,7 +34,7 @@ export const isAuthenticated = async(req: Request, res: Response, next: NextFunc
 
         return next();
     }catch(error){
-        return res.status(403).send("Invalid Token");
+        return refreshTokens(req, res, next)
     }
 }
 

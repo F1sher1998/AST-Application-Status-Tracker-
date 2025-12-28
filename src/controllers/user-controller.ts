@@ -109,7 +109,7 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
 
 
         req.user = {id: user.id, email: user.email};
-        
+
 
         return res.status(200).json({
             message: "You have logged in successfully", 
@@ -203,7 +203,7 @@ export const getCurrentUser = async(req: Request, res: Response): Promise<Respon
         }
 
         return res.status(200).json({
-            user: user[0]
+            user: user.rows[0]
         })
     }catch (error) {
         console.log("Error getting current user:", error);
