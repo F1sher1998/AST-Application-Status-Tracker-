@@ -142,20 +142,20 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
 export const findUser = async(req: Request, res: Response): Promise<Response> => {
 
     /// ID of the desired user
-    const {userId} = req.body
+    const {id} = req.body
 
     /// Check if ID was provided
-    if(!req.body.id) return res.status(400).send("You haven't provided user's id");
+    if(!id) return res.status(400).send("You haven't provided user's id");
 
     /// Search for an existing user
-    const existingUser = await sql`SELECT email FROM users WHERE id = ${parseInt(userId)}`
+    const existingUser = await sql`SELECT email FROM users WHERE id = ${id}`
 
     /// Check if user with this ID exists 
     if(!existingUser) return res.status(400).send("User with this id doesnt exists");
 
     /// Extract existing user
     try{
-        const user = await sql`SELECT name, id FROM users WHERE id = ${userId}`
+        const user = await sql`SELECT name, id FROM users WHERE id = ${id}`
 
         /// Success message
         return res.status(200).json({users: user})
