@@ -50,7 +50,7 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
 }
 
 
-export const addNotes = async(req: Request, res:Response): Promise<Response> =>  {
+export const updateNotes = async(req: Request, res:Response): Promise<Response> =>  {
 
     /// Request parameters
     const { appId } = req.params
@@ -65,7 +65,7 @@ export const addNotes = async(req: Request, res:Response): Promise<Response> => 
     }
 
     /// Assign validated values
-    const body = value
+    const { number, ...notesToUpdate } = value;
 
 
     /// Adding/Updating notes
@@ -73,11 +73,13 @@ export const addNotes = async(req: Request, res:Response): Promise<Response> => 
         
         const note = await sql`
             UPDATE rounds
-            SET ${sql(body)}
-            WHERE user_id = ${userId} AND application_id = ${appId}
+            SET ${sql(notesToUpdate)}
+            WHERE user_id = ${userId}
+                AND application_id = ${appId}
+                AND interview_number = ${number}
             RETURNING *
         `
-        return res.status(200).json({ // Changed 201 to 200 (201 is for creation)
+        return res.status(200).json({
             message: "Note was updated", 
             notes: note.rows
         });

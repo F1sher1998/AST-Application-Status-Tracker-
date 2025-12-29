@@ -6,6 +6,6 @@ const router = Router()
 
 router.post("/:appId", isAuthenticated, roundController.createRound)
 router.get("/:appId", isAuthenticated, roundController.findRounds)
-router.patch("/:appId", isAuthenticated, roundController.addNotes)
+router.patch("/:roundId", isAuthenticated, roundController.updateNotes)
 
 export default router
