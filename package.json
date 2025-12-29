@@ -6,24 +6,13 @@
   "scripts": {
     "build": "tsc",
     "prod:start": "node dist/server.js",
-
-
-    "dev:start": "tsx watch src/server.ts",
-    "redis:test": "tsx redis-test.ts",
-    "neon:test": "tsx neon-test.ts"
+    "dev:start": "tsx watch src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
-    "@types/bcrypt": "^6.0.0",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.0.3",
-    "@types/redis": "^4.0.10",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -34,5 +23,14 @@
     "redis": "^5.10.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.0.3",
+    "@types/redis": "^4.0.10"
   }
 }
