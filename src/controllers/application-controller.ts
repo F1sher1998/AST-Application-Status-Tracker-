@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { applicationSchema } from "../validator";
+import {applicationSchema} from "../validator";
 import { type Application} from "../utils/types";
 import { neon } from "@neondatabase/serverless";
 
@@ -98,7 +98,7 @@ export const FilterApplications = async(req: Request, res:Response): Promise<Res
 
     try{
         const result = await sql`SELECT * FROM applications WHERE ${sql(columnName)} = ${value} AND user_id = ${userId}`
-        
+
         return res.status(200).json({ applications: result.rows });
     }catch(error){
         return res.status(500).json({message: "Internal server error"})

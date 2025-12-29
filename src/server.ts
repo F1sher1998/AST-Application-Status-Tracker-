@@ -41,7 +41,7 @@ app.use("/rounds", roundRouter)
 //connection
 
 // Start Redis Client
-await redisClient.connect();
+redisClient.connect();
 
 // start server
 app.listen(process.env.PORT, () => {

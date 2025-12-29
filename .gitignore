@@ -3,3 +3,4 @@ node_modules/
 test.ts
 neon-test.ts
 redis-test.ts
+dist/
