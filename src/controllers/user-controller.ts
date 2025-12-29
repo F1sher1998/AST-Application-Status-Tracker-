@@ -8,7 +8,7 @@ import { storeRefreshToken } from "../middleware/auth-middleware";
 
 dotenv.config()
 
-const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults:true})
+const sql = neon(process.env.ENVIRONMENT! === 'development' ? process.env.DEV_DATABASE_URL! : process.env.PROD_DATABASE_URL!, {fullResults:true})
 
 /// Creating user controllers
 

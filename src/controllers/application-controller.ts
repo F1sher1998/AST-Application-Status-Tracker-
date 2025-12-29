@@ -3,7 +3,7 @@ import {applicationSchema} from "../validator";
 import { type Application} from "../utils/types";
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults:true})
+const sql = neon(process.env.ENVIRONMENT! === 'development' ? process.env.DEV_DATABASE_URL! : process.env.PROD_DATABASE_URL!, {fullResults:true})
 
 export const createApplication = async(req: Request, res:Response): Promise<Response> => {
 
