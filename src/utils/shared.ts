@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { type CookiePayload, type JwtPayload } from './types';
 import type { Response } from 'express';
-import { sql } from '../db/Neon/neon-client';
 
 
 
