@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import userRouter from "./routes/user-routes"
 import applicationRouter from "./routes/application-routes"
 import roundRouter from './routes/round-routes'
+import checkRouter from './routes/checks-routes'
 import cookieParser from "cookie-parser";
 import { redisClient } from "./db/Redis/redis-client";
 
@@ -36,6 +37,7 @@ app.use(cors({
 app.use("/users", userRouter)
 app.use("/applications", applicationRouter)
 app.use("/rounds", roundRouter)
+app.use("/check", checkRouter)
 
 
 //connection

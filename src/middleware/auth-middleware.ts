@@ -1,9 +1,10 @@
 /// Auth middleware functions
 import { type NextFunction, type Request, type Response } from 'express';
 import { signAccessToken, signRefreshToken, verifyToken } from '../utils/shared';
-import { sql } from '../db/Neon/neon-client';
 import { redisClient } from '../db/Redis/redis-client';
+import { neon } from '@neondatabase/serverless';
 
+const sql = neon(process.env.ENVIRONMENT! === 'development' ? process.env.DEV_DATABASE_URL! : process.env.PROD_DATABASE_URL!, {fullResults:true})
 
 declare global {
   namespace Express {
