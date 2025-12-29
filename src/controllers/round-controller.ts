@@ -8,13 +8,16 @@ const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATAB
 export const createRound = async(req: Request, res:Response): Promise<Response> => {
 
     const {error, value} = roundSchema.validate(req.body)
-    const { appId } = req.params;
-    const userId = req.user!.id
-
-    /// Check for validation error
     if(error){
         return res.status(400).json({errors: error.details.map(d => d.message)})
     }
+
+
+    const { appId } = req.params;
+    if(!appId) return res.status(400).json({message: "No application has been chosen for this operation"})
+    const userId = req.user!.id
+    if(!userId) return res.status(401).json({message: "Unauthorized"})
+
 
     /// Assign validated values
     const body = value as Round
@@ -27,8 +30,19 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
     /// Create a round
     try{
         const [round] = await sql.transaction([sql`
-            INSERT INTO rounds (user_id, application_id, interview_number, prepare_note, reflection_note)
-            VALUES (${userId}, ${appId}, ${body.number}, ${body.prepare}, ${body.reflect})
+            INSERT INTO rounds (
+                user_id, 
+                application_id, 
+                interview_number, 
+                prepare_note, 
+                reflection_note
+                )
+            VALUES (
+                ${userId}, 
+                ${appId}, 
+                ${body.number}, 
+                ${body.prepare}, 
+                ${body.reflect})
             RETURNING *
             `]);
 
@@ -44,25 +58,23 @@ export const createRound = async(req: Request, res:Response): Promise<Response> 
 
     /// Error message
     }catch(error){
-        console.log("Error has occured during creating a round")
-        return res.status(500).json({message: "Internal message error", error: error})
+        return res.status(500).json({message: "Internal message error"})
     }
 }
 
 
 export const updateNotes = async(req: Request, res:Response): Promise<Response> =>  {
 
-    /// Request parameters
-    const { appId } = req.params
-    const userId = req.user!.id
-
-    /// Validating request body
     const {error, value} = noteSchema.validate(req.body);
-
-    /// Check for validation error
     if(error){
         return res.status(400).json({errors: error.details.map(d => d.message)})
     }
+
+    const { appId } = req.params;
+    if(!appId) return res.status(400).json({message: "No application has been chosen for this operation"})
+    const userId = req.user!.id
+    if(!userId) return res.status(401).json({message: "Unauthorized"})
+    
 
     /// Assign validated values
     const { number, ...notesToUpdate } = value;
@@ -78,22 +90,26 @@ export const updateNotes = async(req: Request, res:Response): Promise<Response> 
                 AND application_id = ${appId}
                 AND interview_number = ${number}
             RETURNING *
-        `
+        `;
+
         return res.status(200).json({
             message: "Note was updated", 
             notes: note.rows
         });
     /// Error message
     }catch(error){
-        console.log("Error has occured while updating/adding notes")
-        return res.status(500).json({message: "Internal server error", error: error})
+        return res.status(500).json({message: "Internal server error"})
     }
 }
 
 
 export const findRounds = async(req: Request, res: Response): Promise<Response> => {
+
     const { appId } = req.params;
+    if(!appId) return res.status(400).json({message: "No application has been chosen for this operation"})
     const userId = req.user!.id
+    if(!userId) return res.status(401).json({message: "Unauthorized"})
+
 
     try{
         const rounds = await sql`
@@ -104,6 +120,6 @@ export const findRounds = async(req: Request, res: Response): Promise<Response> 
 
         return res.status(200).json({rounds: rounds});
     }catch(error){
-        return res.status(500).json({message: "Internal server error", error: error})
+        return res.status(500).json({message: "Internal server error"})
     }
 }

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { applicationSchema } from "../validator";
-import { type Application, AllowedFilters } from "../utils/types";
+import { type Application} from "../utils/types";
 import { neon } from "@neondatabase/serverless";
 
 const sql = neon(process.env.ENVIRONMENT! === 'testing' ? process.env.TEST_DATABASE_URL! : process.env.DEV_DATABASE_URL!, {fullResults:true})
@@ -9,7 +9,9 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
 
     /// Application mandatory data
     const { error, value } = applicationSchema.validate(req.body);
+
     const userId = req.user!.id
+    if(!userId) return res.status(401).json({message: "Unauthorized"})
 
     if(error){
         return res.status(400).json({errors: error.details.map(d => d.message)})
@@ -21,8 +23,27 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
     /// Creating an application
     try{
         const [application] = await sql.transaction([sql`
-                INSERT INTO applications (user_id, job_title, status, company, application_date)
-                VALUES (${userId}, ${body.title}, ${body.status}, ${body.company}, ${body.date})
+                INSERT INTO applications (
+                    user_id, 
+                    job_title, 
+                    status, 
+                    company, 
+                    application_date, 
+                    reached_person,
+                    last_touch,
+                    offer,
+                    rej_reason
+                    )
+                VALUES (
+                    ${userId}, 
+                    ${body.title}, 
+                    ${body.status}, 
+                    ${body.company}, 
+                    ${body.date},
+                    ${body.lastTouch},
+                    ${body.offer},
+                    ${body.rejReason}
+                )
                 RETURNING job_title, status, company, application_date
             `]);
 
@@ -39,13 +60,13 @@ export const createApplication = async(req: Request, res:Response): Promise<Resp
 
     /// Error message
     }catch(error){
-        console.log("Error has occured during creation of an application", error)
-        return res.status(500).json({message: "Internal server error", error: error})
+        return res.status(500).json({message: "Internal server error"})
     }
 }
 
 export const findAllApplications = async(req: Request, res:Response): Promise<Response> => {
     const userId = req.user!.id
+    if(!userId) return res.status(401).json({message: "Unauthorized"});
 
     /// Finding applications
     try{
@@ -60,14 +81,14 @@ export const findAllApplications = async(req: Request, res:Response): Promise<Re
         return res.status(200).json({applications: applications.rows});
     /// Error message
     }catch(error){
-        console.log("Error has occured during finding all applications")
-        return res.status(500).json({message: "Internal server error", error: error})
+        return res.status(500).json({message: "Internal server error"})
     }
 }
 
 export const FilterApplications = async(req: Request, res:Response): Promise<Response> => {
 
     const userId = req.user!.id
+    if(!userId) return res.status(401).json({message: "Unauthorized"})
 
     const { columnName, value } = req.body;
     if(!req.body) return res.status(400).json({message: "You havent entered necessary fields"});
@@ -77,7 +98,7 @@ export const FilterApplications = async(req: Request, res:Response): Promise<Res
 
     try{
         const result = await sql`SELECT * FROM applications WHERE ${sql(columnName)} = ${value} AND user_id = ${userId}`
-        //const result = await sql`SELECT * FROM format('SELECT * FROM applications WHERE %I = $L', ${columnName}, ${value})`
+        
         return res.status(200).json({ applications: result.rows });
     }catch(error){
         return res.status(500).json({message: "Internal server error"})
@@ -91,7 +112,7 @@ export const updateApplicationStatus = async(req: Request, res:Response): Promis
     const { status } = req.body;
 
     /// Check if status is provided
-    if(!status) return res.status(400).send("You haven't provided a status");
+    if(!status) return res.status(200).send("You haven't provided a status");
     
     /// Update application status
     try{
@@ -111,7 +132,6 @@ export const updateApplicationStatus = async(req: Request, res:Response): Promis
 
     /// Error message
     }catch(error){
-        console.log("Error has occured during updating application status")
-        return res.status(500).json({message: "Internal server error", error: error});
+        return res.status(500).json({message: "Internal server error"});
     }    
 }

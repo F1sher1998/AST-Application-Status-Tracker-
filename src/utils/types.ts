@@ -1,8 +1,6 @@
 export interface JwtPayload{
     userId: string,
     email: string,
-    iat?: string,
-    exp?: string | number
 }
 
 export interface CookiePayload{
@@ -28,10 +26,10 @@ export interface Application{
     status: string,
     company: string,
     date: string,
-    person?: string,
-    lastTouch?: string,
-    offer?: boolean
-    rejReason?: string
+    person?: string | null,
+    lastTouch?: string | null,
+    offer?: boolean | null
+    rejReason?: string | null
 }
 
 
@@ -42,14 +40,3 @@ export interface Round{
     reflect?: string | null,
     number: number
 }
-
-
-export const AllowedFilters = {
-        status: 'status',
-        title: 'job_title',
-        person: 'reached_person',
-        company: 'company',
-        date: 'created_at',
-        user_id: 'user_id',
-        id: 'id'
-    }

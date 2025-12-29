@@ -121,7 +121,7 @@ export const logInUser = async(req: Request, res: Response): Promise<Response> =
 
     }catch(error){
         console.error('Login error:', error);
-        return res.status(500).json({message: "Internal server error", error: error})
+        return res.status(500).json({message: "Internal server error"})
     }
     
 }
@@ -145,7 +145,7 @@ export const findAllUsers = async(req: Request, res: Response): Promise<Response
         /// Error message
     }catch(error){
         console.log("Error has occured during finding all users")
-        return res.status(500).json({message: "Internal server error", error: error.name})
+        return res.status(500).json({message: "Internal server error"})
     } 
 }
 
@@ -178,7 +178,7 @@ export const findUser = async(req: Request, res: Response): Promise<Response> =>
     /// Error message
     }catch(error){
         console.log("Error has occured during finding a user")
-        return res.status(500).json({message: "Internal server error", error: error.name})
+        return res.status(500).json({message: "Internal server error"})
     }
 }
 
@@ -188,8 +188,10 @@ export const findUser = async(req: Request, res: Response): Promise<Response> =>
 
 export const getCurrentUser = async(req: Request, res: Response): Promise<Response> => {
     try{
-        if(!req.user || !req.user.id){
-            return res.status(401).json({ message: "User not authenticated" });
+        const userId = req.user!.id
+
+        if(!userId){
+            return res.status(401).json({ message: "Unauthorized" });
         }
 
         const user = await sql`
